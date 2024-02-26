@@ -93,7 +93,7 @@ def choice_of_parameters():
     elif st.session_state['type_of_design'] == 'Box-Behnken':
         bb = 'A Box-Behnken design is a statistical method for the design of experiments, frequently used in response surface methodology. It is particularly effective for fitting quadratic models that require fewer runs than factorial designs. This design is a type of three-level factorial design but does not include all combinations of the levels of factors. Instead, it strategically selects points to efficiently estimate the coefficients of a quadratic model. [Box–Behnken design](https://en.wikipedia.org/wiki/Box%E2%80%93Behnken_design)'
         st.markdown(bb)
-        st.image(image='Data/bb.png')
+        st.image(image='https://raw.githubusercontent.com/Patryk0221/LabTech-Assistant/main/Data/bb.png')
         fact, center = st.columns(2)
         num_factors = fact.slider('Select number of factors', min_value=3, max_value=7, value =3)
         num_center = center.slider('Select number of center points', min_value=1, max_value=7, value=3)
@@ -101,7 +101,7 @@ def choice_of_parameters():
     elif st.session_state['type_of_design'] == 'Central-Composite':
         ccd = 'The Central Composite Design (CCD) is a widely used experimental design technique in response surface methodology, particularly valuable for building and refining models that involve quadratic terms. This method is designed to efficiently explore the relationships between several independent variables and one or more response variables. [Central composite design](https://en.wikipedia.org/wiki/Central_composite_design).'
         st.markdown(ccd)
-        st.image(image='Data/ccd.png')
+        st.image(image='https://raw.githubusercontent.com/Patryk0221/LabTech-Assistant/main/Data/Opening.ccd')
         fact, type = st.columns(2)        
         num_factors = fact.slider('Select number of factors', min_value=1, max_value=7, value =3)
         num_center = fact.slider('Select number of center points', min_value=1, max_value=7, value =3)
@@ -166,4 +166,3 @@ if __name__ == '__main__':
             st.download_button(label="Download data as CSV", data=csv, file_name='design_df.csv', mime='text/csv')
         except:
             st.error('You introduced invalid columns names')
-    

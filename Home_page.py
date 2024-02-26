@@ -1,8 +1,9 @@
 import streamlit as st
-img = 'https://github.com/Patryk0221/LabTech-Assistant/blob/main/Data/Opening.png'
+img = 'https://raw.githubusercontent.com/Patryk0221/LabTech-Assistant/main/Data/Opening.png'
+
 @st.cache_data
-def img_loader(img):
-     st.image(img, use_column_width='always')
+def img_loader(img_url):
+    st.image(img_url, use_column_width='always')
 
 if __name__ == '__main__':
     st.set_page_config(page_title='Home', 
