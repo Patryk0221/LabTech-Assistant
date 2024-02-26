@@ -6,11 +6,9 @@ from sklearn.preprocessing import PolynomialFeatures
 from statsmodels.api import OLS
 import plotly.graph_objects as go
 import matplotlib.pyplot as plt
-import io
 import csv
-from pyomo.environ import *
-from pyomo.opt import SolverFactory
 from sklearn.metrics import mean_squared_error, mean_absolute_error
+from scipy.optimize import minimize
 
 if 'df' not in st.session_state:
     st.session_state['df'] = None
@@ -219,6 +217,28 @@ def create_dynamic_model(params, variable_bounds, variable_names):
 
     return model
 
+def objective_function(x, params, variable_names):
+    obj_expr = params.get('1', 0)
+    for i, var_name in enumerate(variable_names):
+        obj_expr += params.get(var_name, 0) * x[i]
+        obj_expr += params.get(f'{var_name}^2', 0) * x[i]**2
+    for i, var1 in enumerate(variable_names):
+        for j, var2 in enumerate(variable_names[i+1:], i+1):
+            obj_expr += params.get(f'{var1} {var2}', 0) * x[i] * x[j]
+    return -obj_expr  # Minimize (-f(x)) to maximize f(x)
+
+
+def prepare_bounds(variable_bounds, variable_names):
+    bounds = [variable_bounds[var_name] for var_name in variable_names]
+    return bounds
+
+
+def optimize_with_scipy(params, bounds_dict, variable_names):
+    bounds = prepare_bounds(bounds_dict, variable_names)
+    initial_guess = np.zeros(len(variable_names))
+    optimization = minimize(objective_function, initial_guess, args=(params, variable_names), bounds=bounds, method='SLSQP')
+    return optimization
+        
 def coded_to_natural(input_table, columns, range_value, center_value):
     for i in columns:   
         input_table[f'natural_{i}'] = input_table[i].apply(lambda x: x * range_value + center_value)
@@ -335,47 +355,42 @@ if selected_tab == "Optimization":
         if model_type == 'Coded variables':
             for i in st.session_state['model_X']:
                 lower, upper, zero, change = st.columns(4)
-                lower.number_input(f'Lower bound {i}', key = f'lower bound {i}', value = None)
-                upper.number_input(f'Upper bound {i}', key = f'upper bound {i}', value = None)
+                lower.number_input(f'Lower bound {i}', key = f'lower_bound {i}', value = None)
+                upper.number_input(f'Upper bound {i}', key = f'upper_bound {i}', value = None)
                 center_value = zero.number_input(label=f'Zero point of {i}', key=f'{i}_center',step=0.1)
                 range_value = change.number_input(label=f'Change of : {i}', key=f'{i}_value', step=0.1)
-                bounds_dict[i] = (st.session_state[f'lower bound {i}'], st.session_state[f'upper bound {i}'])
-            objective_func = create_dynamic_model(st.session_state['params'], bounds_dict, st.session_state['model_X'])
-            solver = SolverFactory('ipopt')
-            results = solver.solve(objective_func, tee=True)
+                bounds_dict[i] = (st.session_state[f'lower_bound {i}'], st.session_state[f'upper_bound {i}'])
             optimize_coded_button = st.button('Optimize')
             if optimize_coded_button:
+                
+                optimization_natural  = optimize_with_scipy(st.session_state['params'], bounds_dict, st.session_state['model_X'])
+                optimal_values = optimization_natural.x
+                max_obj_value = -optimization_natural.fun
                 coded, natural = st.columns(2)
                 coded.markdown('#### Optimal parameters (coded)')
                 natural.markdown('#### Optimal parameters (natural)')
-                try:
-                    for var_name in st.session_state['model_X']:
-                        optimal_conditions_natural = natural.markdown(f'{var_name}: {objective_func.vars[var_name].value * range_value + center_value}')
-                        optimal_conditions_coded = coded.markdown(f'{var_name}: {objective_func.vars[var_name].value}')
-                    output = natural.markdown(objective_func.obj)                      
-                except: 
-                    st.error(' Upss... something is wrong, check your bounds and values')
+                
+                for i, var_name in enumerate(st.session_state['model_X']):
+                    coded.write(f'{var_name}: {optimal_values[i]}')
+                    natural.write(f'{var_name}: {optimal_values[i] * range_value + center_value}')
+                coded.write(f"Maximum value: {max_obj_value}")
+                natural.write(f"Maximum value: {max_obj_value}")
+                    
         if model_type == 'Natural variables':
-            
+            bounds_dict = {}
+            lower_natural, upper_natural = st.columns(2)
             for i in st.session_state['model_X']:
-                lower, upper = st.columns(2)
-                lower_bound = lower.number_input(f'Lower bound {i}', key = f'lower_bound_{i}_natural', value = None)
-                upper_bound = upper.number_input(f'Upper bound {i}', key = f'upper_bound _{i}_natural;', value = None)
-                bounds_dict[i] = (lower_bound, upper_bound)
-            objective_func = create_dynamic_model(st.session_state['params'], bounds_dict, st.session_state['model_X'])
-            solver = SolverFactory('ipopt')
-            results = solver.solve(objective_func, tee=True)
+                lower_bound = lower_natural.number_input(f'Lower bound {i}', key = f'lower_bound_natural {i}', value = None)
+                upper_bound = upper_natural.number_input(f'Upper bound {i}', key = f'upper_bound_natural {i}', value = None)
+                bounds_dict[i] = (st.session_state[f'lower_bound_natural {i}'], st.session_state[f'upper_bound_natural {i}'])
             optimize_natural_button = st.button('Optimize')
             if optimize_natural_button:
-                st.markdown('#### Optimal parameters (natural)')
-                try:
-                    for var_name in st.session_state['model_X']:
-                        optimal_conditions = st.write(f'{var_name}: {objective_func.vars[var_name].value}')
-                    max_obj_value = objective_func.obj.expr()
-                    st.write(f"Maximum value of the objective function: {max_obj_value}")         
-                except: 
-                    st.error(' Upss... something is wrong, check your bounds')
-                    
+                    optimization_natural  = optimize_with_scipy(st.session_state['params'], bounds_dict, st.session_state['model_X'])
+                    optimal_values = optimization_natural.x
+                    max_obj_value = -optimization_natural.fun
+                    for i, var_name in enumerate(st.session_state['model_X']):
+                        st.write(f'{var_name}: {optimal_values[i]}')
+                    st.write(f"Maximum value: {max_obj_value}")
 if selected_tab == "Validation":
     st.markdown('# Model validation')
     if 'model_results' not in st.session_state or st.session_state['model_results'] is None:
