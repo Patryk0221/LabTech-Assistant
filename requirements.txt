@@ -5,6 +5,5 @@ scikit-learn
 statsmodels
 plotly
 matplotlib
-Pyomo
 pyDOE2
-ipopt
+scipy
