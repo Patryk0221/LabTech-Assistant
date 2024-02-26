@@ -1,5 +1,5 @@
 import streamlit as st
-img = 'Data/opening.png'
+img = 'https://github.com/Patryk0221/LabTech-Assistant/blob/main/Data/Opening.png'
 @st.cache_data
 def img_loader(img):
      st.image(img, use_column_width='always')
