@@ -262,6 +262,21 @@ def parameters_calculation(val_df):
 
 if selected_tab == "Create model":
     st.markdown("# Create model")
+    with st.container(border=True):
+        st.write('The principle of creating a quadratic Response Surface Methodology (RSM) model involves a systematic approach to model and analyze problems where the goal is to optimize an output based on several input variables. This method employs statistical and mathematical techniques to develop an understanding of the relationship between input variables and the response. For a quadratic model, this relationship is characterized using second-degree equations, allowing for the capture of not only the direct effects of input variables on the response but also their interactions and nonlinear effects.')
+    st.latex(r'''
+y = \beta_0 + \beta_1x_1 + \beta_2x_2 + \beta_3x_3 + \beta_4x_1^2 + \beta_5x_2^2 + \beta_6x_3^2 
++ \beta_7x_1x_2 + \beta_8x_1x_3 + \beta_9x_2x_3 + \epsilon
+''')
+    st.markdown("""
+Gdzie:
+- $y$ jest zmienną zależną (przewidywaną),
+- $x_1$, $x_2$, $x_3$ są zmiennymi niezależnymi,
+- $\eta_0, \eta_1, ..., \eta_9$ są współczynnikami modelu,
+- $\epsilon$ jest błędem losowym modelu.
+""")
+
+
     uploaded_file = st.file_uploader("Choose a CSV or Excel file", type=["csv", "xlsx"], key='data_frame')
     load_data(uploaded_file)
     if st.session_state['data_frame'] is not None:
@@ -269,8 +284,9 @@ if selected_tab == "Create model":
         expander_df = st.expander('Your data')
         expander_df.write(df)
         with st.form("my_form"):
+            st.write('select the columns containing the variables that will be included in the model and the column containing the response value')
             selected_X = st.multiselect('Variables for analysis', options=df.columns, key = 'X')
-            selected_y = st.selectbox('Select column of response (y)', options=df.columns, index=None, key='y')
+            selected_y = st.selectbox('Column of response (y)', options=df.columns, index=None, key='y')
             submit_button = st.form_submit_button("Submit")
             
         if submit_button:
@@ -281,6 +297,7 @@ if selected_tab == "Create model":
             df_X =df[st.session_state['X']]
             df_y = df[st.session_state['y']] 
             X_poly = poly_transformation(df_X)
+            st.write('Performed polynomial transformation of data frame, select variables for model')
             chosen_variables = st.multiselect('Select variables for model', options = X_poly.columns, key ='X_poly')
             create_model_button = st.button("Create model", on_click=create_model, args=(X_poly, df_y, chosen_variables))
 
