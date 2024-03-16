@@ -269,11 +269,11 @@ y = \beta_0 + \beta_1x_1 + \beta_2x_2 + \beta_3x_3 + \beta_4x_1^2 + \beta_5x_2^2
 + \beta_7x_1x_2 + \beta_8x_1x_3 + \beta_9x_2x_3 + \epsilon
 ''')
     st.markdown("""
-Gdzie:
-- $y$ jest zmienną zależną (przewidywaną),
-- $x_1$, $x_2$, $x_3$ są zmiennymi niezależnymi,
-- $\eta_0, \eta_1, ..., \eta_9$ są współczynnikami modelu,
-- $\epsilon$ jest błędem losowym modelu.
+Where:
+- $y$ is the dependent variable (predicted),
+- $x_1$, $x_2$, $x_3$ are the independent variables,
+- $\eta_0, \eta_1, ..., \eta_9$ are the model coefficients,
+- $\epsilon$ is the model's random error.
 """)
 
 
